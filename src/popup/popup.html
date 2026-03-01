@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GitHub Stack Analyzer</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div id="app">
+    <header class="header">
+      <h1 class="header-title">Stack Analyzer</h1>
+      <span id="repo-name" class="repo-name"></span>
+    </header>
+
+    <div id="loading" class="loading hidden">
+      <div class="spinner"></div>
+      <p>Analyzing repository...</p>
+    </div>
+
+    <div id="empty-state" class="empty-state hidden">
+      <p class="empty-icon">?</p>
+      <p class="empty-text">No technologies detected</p>
+      <p class="empty-hint">Navigate to a GitHub repository and try again.</p>
+    </div>
+
+    <div id="not-github" class="empty-state hidden">
+      <p class="empty-icon">!</p>
+      <p class="empty-text">Not a GitHub repository</p>
+      <p class="empty-hint">Open a GitHub repository page to analyze its tech stack.</p>
+    </div>
+
+    <div id="results" class="results hidden"></div>
+  </div>
+  <script type="module" src="popup.ts"></script>
+</body>
+</html>

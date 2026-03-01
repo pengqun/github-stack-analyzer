@@ -1,0 +1,177 @@
+import type { ParsedDependencies, RepoInfo } from './types';
+import { GITHUB_RAW_BASE, MANIFEST_FILES } from './constants';
+
+/**
+ * Build the raw.githubusercontent.com URL for a file in a repo.
+ */
+function rawUrl(repo: RepoInfo, filePath: string): string {
+  return `${GITHUB_RAW_BASE}/${repo.owner}/${repo.repo}/${repo.branch}/${filePath}`;
+}
+
+/**
+ * Fetch a raw file from GitHub. Returns null if 404 or error.
+ */
+async function fetchRawFile(url: string): Promise<string | null> {
+  try {
+    const response = await fetch(url);
+    if (!response.ok) return null;
+    return await response.text();
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Parse dependencies from package.json content.
+ */
+export function parsePackageJson(content: string): string[] {
+  try {
+    const pkg = JSON.parse(content);
+    const deps = new Set<string>();
+    for (const key of ['dependencies', 'devDependencies', 'peerDependencies']) {
+      if (pkg[key] && typeof pkg[key] === 'object') {
+        Object.keys(pkg[key]).forEach((d) => deps.add(d));
+      }
+    }
+    return [...deps];
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Parse dependencies from requirements.txt content.
+ * Handles lines like: flask==2.0.0, django>=4.0, numpy
+ */
+export function parseRequirementsTxt(content: string): string[] {
+  return content
+    .split('\n')
+    .map((line) => line.trim())
+    .filter((line) => line && !line.startsWith('#') && !line.startsWith('-'))
+    .map((line) => line.split(/[>=<~![;]/)[0].trim())
+    .filter(Boolean);
+}
+
+/**
+ * Parse dependencies from Gemfile content.
+ * Handles lines like: gem 'rails', '~> 7.0'
+ */
+export function parseGemfile(content: string): string[] {
+  const gems: string[] = [];
+  const gemPattern = /gem\s+['"]([^'"]+)['"]/g;
+  let match;
+  while ((match = gemPattern.exec(content)) !== null) {
+    gems.push(match[1]);
+  }
+  return gems;
+}
+
+/**
+ * Parse dependencies from go.mod content.
+ * Handles lines like: require github.com/gin-gonic/gin v1.9.0
+ */
+export function parseGoMod(content: string): string[] {
+  const deps: string[] = [];
+  const lines = content.split('\n');
+  let inRequire = false;
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (trimmed.startsWith('require (')) {
+      inRequire = true;
+      continue;
+    }
+    if (trimmed === ')') {
+      inRequire = false;
+      continue;
+    }
+    if (inRequire || trimmed.startsWith('require ')) {
+      const depMatch = trimmed.match(/^(?:require\s+)?([^\s]+)\s+/);
+      if (depMatch) {
+        deps.push(depMatch[1]);
+      }
+    }
+  }
+  return deps;
+}
+
+/**
+ * Parse dependencies from Cargo.toml content.
+ */
+export function parseCargoToml(content: string): string[] {
+  const deps: string[] = [];
+  let inDeps = false;
+  for (const line of content.split('\n')) {
+    const trimmed = line.trim();
+    if (trimmed.match(/^\[.*dependencies.*\]$/)) {
+      inDeps = true;
+      continue;
+    }
+    if (trimmed.startsWith('[') && !trimmed.includes('dependencies')) {
+      inDeps = false;
+      continue;
+    }
+    if (inDeps) {
+      const match = trimmed.match(/^([a-zA-Z0-9_-]+)\s*=/);
+      if (match) deps.push(match[1]);
+    }
+  }
+  return deps;
+}
+
+/**
+ * Parse dependencies from composer.json content.
+ */
+export function parseComposerJson(content: string): string[] {
+  try {
+    const data = JSON.parse(content);
+    const deps = new Set<string>();
+    for (const key of ['require', 'require-dev']) {
+      if (data[key] && typeof data[key] === 'object') {
+        Object.keys(data[key]).forEach((d) => deps.add(d));
+      }
+    }
+    return [...deps];
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Route a manifest file to its appropriate parser.
+ */
+export function parseManifestContent(fileName: string, content: string): string[] {
+  if (fileName === 'package.json') return parsePackageJson(content);
+  if (fileName === 'requirements.txt' || fileName === 'Pipfile') return parseRequirementsTxt(content);
+  if (fileName === 'Gemfile') return parseGemfile(content);
+  if (fileName === 'go.mod') return parseGoMod(content);
+  if (fileName === 'Cargo.toml') return parseCargoToml(content);
+  if (fileName === 'composer.json') return parseComposerJson(content);
+  return [];
+}
+
+/**
+ * Fetch and parse all detectable manifest files from a repository.
+ */
+export async function fetchAndParseManifests(
+  repo: RepoInfo,
+  fileTree: string[],
+): Promise<ParsedDependencies[]> {
+  const results: ParsedDependencies[] = [];
+
+  const manifestsPresent = MANIFEST_FILES.filter((m) =>
+    fileTree.some((f) => f === m || f.endsWith(`/${m}`)),
+  );
+
+  const fetches = manifestsPresent.map(async (fileName) => {
+    const content = await fetchRawFile(rawUrl(repo, fileName));
+    if (content) {
+      const packages = parseManifestContent(fileName, content);
+      if (packages.length > 0) {
+        results.push({ source: fileName, packages });
+      }
+    }
+  });
+
+  await Promise.all(fetches);
+  return results;
+}
