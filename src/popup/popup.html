@@ -30,6 +30,13 @@
       <p class="empty-hint">Open a GitHub repository page to analyze its tech stack.</p>
     </div>
 
+    <div id="error-state" class="error-state hidden">
+      <p class="error-icon" id="error-icon">&#9888;</p>
+      <p class="error-text" id="error-text">An error occurred</p>
+      <p class="error-hint" id="error-hint"></p>
+      <button class="retry-btn hidden" id="retry-btn">Retry</button>
+    </div>
+
     <div id="results" class="results hidden"></div>
   </div>
   <script type="module" src="popup.ts"></script>

@@ -20,6 +20,7 @@
   background-color: #aceebb;
 }
 
+/* Dark mode via system preference */
 @media (prefers-color-scheme: dark) {
   #gsa-tech-badge {
     color: #3fb950;
@@ -30,4 +31,17 @@
   #gsa-tech-badge:hover {
     background-color: #161b22;
   }
+}
+
+/* Dark mode via GitHub's data-color-mode attribute */
+[data-color-mode="dark"] #gsa-tech-badge,
+[data-dark-theme] #gsa-tech-badge {
+  color: #3fb950;
+  background-color: #0d1117;
+  border-color: #238636;
+}
+
+[data-color-mode="dark"] #gsa-tech-badge:hover,
+[data-dark-theme] #gsa-tech-badge:hover {
+  background-color: #161b22;
 }

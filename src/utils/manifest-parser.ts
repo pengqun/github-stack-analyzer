@@ -1,5 +1,7 @@
-import type { ParsedDependencies, RepoInfo } from './types';
+import type { ParsedDependencies, RepoInfo, AnalysisError } from './types';
 import { GITHUB_RAW_BASE, MANIFEST_FILES } from './constants';
+
+const FETCH_TIMEOUT_MS = 30_000;
 
 /**
  * Build the raw.githubusercontent.com URL for a file in a repo.
@@ -9,14 +11,44 @@ function rawUrl(repo: RepoInfo, filePath: string): string {
 }
 
 /**
- * Fetch a raw file from GitHub. Returns null if 404 or error.
+ * Fetch a raw file from GitHub with timeout and error classification.
+ * Returns null if 404 or non-critical error. Throws AnalysisError for auth/rate-limit issues.
  */
 async function fetchRawFile(url: string): Promise<string | null> {
   try {
-    const response = await fetch(url);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+
+    const response = await fetch(url, { signal: controller.signal });
+    clearTimeout(timeoutId);
+
+    if (response.status === 404) return null;
+
+    if (response.status === 401 || response.status === 403) {
+      const error: AnalysisError = {
+        code: 'PRIVATE_REPO',
+        message: 'This repository is private or access is restricted.',
+        retryable: false,
+      };
+      throw error;
+    }
+
+    if (response.status === 429) {
+      const retryAfter = response.headers.get('Retry-After');
+      const error: AnalysisError = {
+        code: 'RATE_LIMITED',
+        message: 'GitHub API rate limit reached. Please try again later.',
+        retryable: true,
+        retryAfterMs: retryAfter ? parseInt(retryAfter, 10) * 1000 : 60_000,
+      };
+      throw error;
+    }
+
     if (!response.ok) return null;
     return await response.text();
-  } catch {
+  } catch (e) {
+    // Re-throw AnalysisError
+    if (e && typeof e === 'object' && 'code' in e) throw e;
     return null;
   }
 }

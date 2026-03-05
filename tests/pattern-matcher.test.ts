@@ -118,4 +118,69 @@ describe('matchTechnologies', () => {
     const result = matchTechnologies(['file.ts'], [], []);
     expect(result).toHaveLength(0);
   });
+
+  it('detects technologies from content patterns', () => {
+    const fpWithContent: TechFingerprint = {
+      id: 'express',
+      name: 'Express',
+      category: 'framework',
+      patterns: {
+        contents: [
+          { file: '*.js', pattern: "require\\(['\"]express['\"]\\)" },
+        ],
+      },
+      confidence: { fileMatch: 3, depMatch: 10, contentMatch: 5 },
+    };
+
+    const fileContents = new Map<string, string>();
+    fileContents.set('server.js', "const express = require('express');\nconst app = express();");
+
+    const result = matchTechnologies(['server.js'], [], [fpWithContent], fileContents);
+    expect(result).toHaveLength(1);
+    expect(result[0].tech.id).toBe('express');
+    expect(result[0].signals.some((s) => s.type === 'content')).toBe(true);
+  });
+
+  it('does not match content patterns when content does not match', () => {
+    const fpWithContent: TechFingerprint = {
+      id: 'express',
+      name: 'Express',
+      category: 'framework',
+      patterns: {
+        contents: [
+          { file: '*.js', pattern: "require\\(['\"]express['\"]\\)" },
+        ],
+      },
+      confidence: { fileMatch: 3, depMatch: 10, contentMatch: 5 },
+    };
+
+    const fileContents = new Map<string, string>();
+    fileContents.set('server.js', "const http = require('http');");
+
+    const result = matchTechnologies(['server.js'], [], [fpWithContent], fileContents);
+    expect(result).toHaveLength(0);
+  });
+
+  it('adds content match score to total confidence', () => {
+    const fpWithContent: TechFingerprint = {
+      id: 'react',
+      name: 'React',
+      category: 'framework',
+      patterns: {
+        files: ['*.tsx'],
+        contents: [
+          { file: '*.tsx', pattern: "import.*from ['\"]react['\"]" },
+        ],
+      },
+      confidence: { fileMatch: 8, depMatch: 10, contentMatch: 5 },
+    };
+
+    const fileContents = new Map<string, string>();
+    fileContents.set('App.tsx', "import React from 'react';");
+
+    const withContent = matchTechnologies(['App.tsx'], [], [fpWithContent], fileContents);
+    const withoutContent = matchTechnologies(['App.tsx'], [], [fpWithContent]);
+
+    expect(withContent[0].score).toBeGreaterThan(withoutContent[0].score);
+  });
 });

@@ -3,7 +3,7 @@ import { categorizeResults } from '../utils/categorizer';
 import { fetchAndParseManifests } from '../utils/manifest-parser';
 import { parseRepoUrl } from '../utils/file-tree-parser';
 import fingerprints from '../data/fingerprints.json';
-import type { TechFingerprint, AnalysisResult } from '../utils/types';
+import type { TechFingerprint, AnalysisResult, AnalysisError } from '../utils/types';
 import { CACHE_TTL_MS } from '../utils/constants';
 
 const typedFingerprints = fingerprints as TechFingerprint[];
@@ -20,8 +20,8 @@ async function getCachedResult(repoUrl: string): Promise<AnalysisResult | null> 
     if (entry && Date.now() - entry.timestamp < CACHE_TTL_MS) {
       return entry.result;
     }
-  } catch {
-    // Storage may be unavailable
+  } catch (e) {
+    console.warn('[GSA] Cache read failed:', e);
   }
   return null;
 }
@@ -30,15 +30,66 @@ async function setCachedResult(repoUrl: string, result: AnalysisResult): Promise
   try {
     const entry: CacheEntry = { result, timestamp: Date.now() };
     await chrome.storage.local.set({ [repoUrl]: entry });
-  } catch {
-    // Storage may be unavailable
+  } catch (e) {
+    console.warn('[GSA] Cache write failed:', e);
   }
+}
+
+function classifyFetchError(status: number, retryAfterHeader: string | null): AnalysisError {
+  if (status === 401 || status === 403) {
+    return {
+      code: 'PRIVATE_REPO',
+      message: 'This repository is private or access is restricted. Authentication is required.',
+      retryable: false,
+    };
+  }
+  if (status === 429) {
+    const retryAfterMs = retryAfterHeader ? parseInt(retryAfterHeader, 10) * 1000 : 60_000;
+    return {
+      code: 'RATE_LIMITED',
+      message: 'GitHub API rate limit reached. Please try again later.',
+      retryable: true,
+      retryAfterMs,
+    };
+  }
+  return {
+    code: 'NETWORK_ERROR',
+    message: `Request failed with status ${status}.`,
+    retryable: true,
+  };
+}
+
+function toAnalysisError(error: unknown): AnalysisError {
+  if (error && typeof error === 'object' && 'code' in error) {
+    return error as AnalysisError;
+  }
+  if (error instanceof TypeError && error.message.includes('fetch')) {
+    return {
+      code: 'NETWORK_ERROR',
+      message: 'Network error. Check your internet connection.',
+      retryable: true,
+    };
+  }
+  return {
+    code: 'UNKNOWN_ERROR',
+    message: error instanceof Error ? error.message : 'An unexpected error occurred.',
+    retryable: false,
+  };
 }
 
 async function analyzeRepo(repoUrl: string, fileTree: string[]): Promise<AnalysisResult> {
   // Check cache first
   const cached = await getCachedResult(repoUrl);
   if (cached) return cached;
+
+  if (fileTree.length === 0) {
+    const error: AnalysisError = {
+      code: 'EMPTY_REPO',
+      message: 'No files detected in this repository.',
+      retryable: false,
+    };
+    throw error;
+  }
 
   const repoInfo = parseRepoUrl(repoUrl);
 
@@ -75,7 +126,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
       .catch((error) => {
         sendResponse({
           type: 'ANALYSIS_ERROR',
-          error: error instanceof Error ? error.message : 'Unknown error',
+          error: toAnalysisError(error),
         });
       });
     return true; // Keep message channel open for async response
@@ -92,3 +143,5 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     return true;
   }
 });
+
+export { classifyFetchError, toAnalysisError };

@@ -1,19 +1,53 @@
 import { categorizeResults, confidenceLabel } from '../utils/categorizer';
 import { isRepoPage } from '../utils/file-tree-parser';
-import type { AnalysisResult, DetectedTech } from '../utils/types';
+import type { AnalysisResult, AnalysisError, DetectedTech } from '../utils/types';
 import { CATEGORY_LABELS } from '../utils/constants';
 
 const loadingEl = document.getElementById('loading')!;
 const emptyStateEl = document.getElementById('empty-state')!;
 const notGithubEl = document.getElementById('not-github')!;
+const errorStateEl = document.getElementById('error-state')!;
+const errorTextEl = document.getElementById('error-text')!;
+const errorHintEl = document.getElementById('error-hint')!;
+const retryBtnEl = document.getElementById('retry-btn')!;
 const resultsEl = document.getElementById('results')!;
 const repoNameEl = document.getElementById('repo-name')!;
 
-function showSection(section: 'loading' | 'empty' | 'not-github' | 'results') {
+function showSection(section: 'loading' | 'empty' | 'not-github' | 'error' | 'results') {
   loadingEl.classList.toggle('hidden', section !== 'loading');
   emptyStateEl.classList.toggle('hidden', section !== 'empty');
   notGithubEl.classList.toggle('hidden', section !== 'not-github');
+  errorStateEl.classList.toggle('hidden', section !== 'error');
   resultsEl.classList.toggle('hidden', section !== 'results');
+}
+
+function showError(error: AnalysisError) {
+  errorTextEl.textContent = error.message;
+
+  switch (error.code) {
+    case 'PRIVATE_REPO':
+      errorHintEl.textContent = 'GitHub API authentication is not yet supported.';
+      retryBtnEl.classList.add('hidden');
+      break;
+    case 'RATE_LIMITED':
+      errorHintEl.textContent = 'Too many requests. Wait a moment and try again.';
+      retryBtnEl.classList.remove('hidden');
+      break;
+    case 'NETWORK_ERROR':
+      errorHintEl.textContent = 'Check your internet connection and try again.';
+      retryBtnEl.classList.remove('hidden');
+      break;
+    case 'EMPTY_REPO':
+      errorHintEl.textContent = 'This repository appears to be empty.';
+      retryBtnEl.classList.add('hidden');
+      break;
+    default:
+      errorHintEl.textContent = 'Something went wrong.';
+      retryBtnEl.classList.remove('hidden');
+      break;
+  }
+
+  showSection('error');
 }
 
 function getScoreClass(score: number): string {
@@ -163,15 +197,50 @@ async function init() {
       fileTree,
     });
 
-    if (response?.type === 'ANALYSIS_RESULT' && response.result) {
+    if (response?.type === 'ANALYSIS_ERROR' && response.error) {
+      showError(response.error);
+    } else if (response?.type === 'ANALYSIS_RESULT' && response.result) {
       renderResults(response.result);
     } else {
       showSection('empty');
     }
   } catch (error) {
     console.error('GitHub Stack Analyzer error:', error);
-    showSection('empty');
+    showError({
+      code: 'UNKNOWN_ERROR',
+      message: 'Failed to analyze repository.',
+      retryable: true,
+    });
   }
 }
 
+// Detect GitHub's theme from the active tab and apply it to popup
+async function detectTheme() {
+  try {
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (!tab?.id || !tab.url?.includes('github.com')) return;
+
+    const results = await chrome.scripting.executeScript({
+      target: { tabId: tab.id },
+      func: () => {
+        const html = document.documentElement;
+        return html.getAttribute('data-color-mode') || null;
+      },
+    });
+
+    const colorMode = results?.[0]?.result as string | null;
+    if (colorMode === 'dark') {
+      document.documentElement.setAttribute('data-theme', 'dark');
+    }
+  } catch {
+    // Theme detection is optional, fail silently
+  }
+}
+
+// Retry button handler
+retryBtnEl.addEventListener('click', () => {
+  init();
+});
+
+detectTheme();
 init();
