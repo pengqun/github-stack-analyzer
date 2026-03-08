@@ -1,4 +1,4 @@
-import type { TechFingerprint, DetectedTech, Signal, ParsedDependencies } from './types';
+import type { TechFingerprint, DetectedTech, Signal, ParsedDependencies, ContentPattern } from './types';
 
 /**
  * Convert a simple glob pattern (e.g., "*.ts", "next.config.*") to a RegExp.
@@ -103,21 +103,60 @@ function matchDependencies(
 }
 
 /**
- * Run all fingerprints against the file tree and parsed dependencies.
+ * Match file contents against a fingerprint's content patterns.
+ * fileContents maps file paths to their text content.
+ */
+function matchContents(
+  fileContents: Map<string, string>,
+  fingerprint: TechFingerprint,
+): Signal[] {
+  const signals: Signal[] = [];
+  const contentPatterns: ContentPattern[] = fingerprint.patterns.contents || [];
+  if (contentPatterns.length === 0) return signals;
+
+  for (const cp of contentPatterns) {
+    // Find matching files by glob pattern
+    const regex = globToRegex(cp.file);
+    for (const [filePath, content] of fileContents) {
+      const baseName = filePath.includes('/') ? filePath.split('/').pop()! : filePath;
+      if (!regex.test(baseName)) continue;
+
+      try {
+        const pattern = new RegExp(cp.pattern);
+        if (pattern.test(content)) {
+          signals.push({
+            type: 'content',
+            source: filePath,
+            detail: `Content pattern "${cp.pattern}" matched in "${filePath}"`,
+          });
+        }
+      } catch {
+        // Invalid regex pattern, skip
+      }
+    }
+  }
+  return signals;
+}
+
+/**
+ * Run all fingerprints against the file tree, parsed dependencies, and optionally file contents.
  * Returns technologies that matched with at least one signal.
  */
 export function matchTechnologies(
   fileTree: string[],
   parsedDeps: ParsedDependencies[],
   fingerprints: TechFingerprint[],
+  fileContents?: Map<string, string>,
 ): DetectedTech[] {
   const results: DetectedTech[] = [];
+  const contents = fileContents || new Map<string, string>();
 
   for (const fp of fingerprints) {
     const fileSignals = matchFiles(fileTree, fp);
     const dirSignals = matchDirectories(fileTree, fp);
     const depSignals = matchDependencies(parsedDeps, fp);
-    const allSignals = [...fileSignals, ...dirSignals, ...depSignals];
+    const contentSignals = matchContents(contents, fp);
+    const allSignals = [...fileSignals, ...dirSignals, ...depSignals, ...contentSignals];
 
     if (allSignals.length === 0) continue;
 
@@ -131,6 +170,9 @@ export function matchTechnologies(
     }
     if (depSignals.length > 0) {
       score += Math.min(depSignals.length * fp.confidence.depMatch, 40);
+    }
+    if (contentSignals.length > 0) {
+      score += Math.min(contentSignals.length * fp.confidence.contentMatch, 20);
     }
     score = Math.min(score, 100);
 

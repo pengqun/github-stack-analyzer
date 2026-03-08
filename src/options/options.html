@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GitHub Stack Analyzer — Settings</title>
+  <link rel="stylesheet" href="options.css">
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <h1>Stack Analyzer Settings</h1>
+    </header>
+
+    <section class="section">
+      <h2 class="section-title">Display</h2>
+
+      <div class="setting-row">
+        <label class="setting-label" for="show-badge">Show inline badge on GitHub pages</label>
+        <input type="checkbox" id="show-badge" checked>
+      </div>
+
+      <div class="setting-row">
+        <label class="setting-label" for="min-confidence">Minimum confidence level</label>
+        <select id="min-confidence">
+          <option value="0">Trace (show all)</option>
+          <option value="20">Low</option>
+          <option value="50" selected>Medium</option>
+          <option value="80">High</option>
+        </select>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2 class="section-title">Categories</h2>
+      <p class="section-hint">Choose which technology categories to display.</p>
+
+      <div class="categories-grid" id="categories-grid"></div>
+    </section>
+
+    <div class="actions">
+      <button class="btn-save" id="save-btn">Save Settings</button>
+      <span class="save-status hidden" id="save-status">Settings saved</span>
+    </div>
+  </div>
+  <script type="module" src="options.ts"></script>
+</body>
+</html>

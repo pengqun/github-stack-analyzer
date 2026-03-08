@@ -3,6 +3,24 @@ import type { AnalysisResult } from '../utils/types';
 
 const BADGE_ID = 'gsa-tech-badge';
 
+interface GSASettings {
+  showBadge: boolean;
+  minConfidence: number;
+  enabledCategories: string[];
+}
+
+async function getSettings(): Promise<GSASettings> {
+  try {
+    const data = await chrome.storage.sync.get('gsaSettings');
+    if (data.gsaSettings) {
+      return data.gsaSettings as GSASettings;
+    }
+  } catch {
+    // Default settings
+  }
+  return { showBadge: true, minConfidence: 0, enabledCategories: [] };
+}
+
 function createBadge(count: number): HTMLElement {
   let badge = document.getElementById(BADGE_ID);
   if (badge) {
@@ -48,9 +66,15 @@ function injectBadge(result: AnalysisResult): void {
   }
 }
 
-function analyze(): void {
+async function analyze(): Promise<void> {
   const url = window.location.href;
   if (!isRepoPage(url)) {
+    removeBadge();
+    return;
+  }
+
+  const settings = await getSettings();
+  if (!settings.showBadge) {
     removeBadge();
     return;
   }
@@ -61,14 +85,32 @@ function analyze(): void {
 
   if (allEntries.length === 0) return;
 
-  chrome.runtime.sendMessage(
-    { type: 'ANALYZE_REPO', repoUrl: url, fileTree: allEntries },
-    (response) => {
-      if (response?.type === 'ANALYSIS_RESULT' && response.result) {
-        injectBadge(response.result);
-      }
-    },
-  );
+  try {
+    chrome.runtime.sendMessage(
+      { type: 'ANALYZE_REPO', repoUrl: url, fileTree: allEntries },
+      (response) => {
+        // Handle extension context invalidated
+        if (chrome.runtime.lastError) {
+          console.warn('[GSA] Message failed:', chrome.runtime.lastError.message);
+          removeBadge();
+          return;
+        }
+
+        if (response?.type === 'ANALYSIS_ERROR') {
+          // On error, hide badge rather than showing stale data
+          removeBadge();
+          return;
+        }
+
+        if (response?.type === 'ANALYSIS_RESULT' && response.result) {
+          injectBadge(response.result);
+        }
+      },
+    );
+  } catch {
+    // Extension context may be invalidated after update
+    removeBadge();
+  }
 }
 
 // Run analysis on page load

@@ -68,8 +68,23 @@ export interface RepoInfo {
   branch: string;
 }
 
+export type AnalysisErrorCode =
+  | 'PRIVATE_REPO'
+  | 'EMPTY_REPO'
+  | 'RATE_LIMITED'
+  | 'REPO_TOO_LARGE'
+  | 'NETWORK_ERROR'
+  | 'UNKNOWN_ERROR';
+
+export interface AnalysisError {
+  code: AnalysisErrorCode;
+  message: string;
+  retryable: boolean;
+  retryAfterMs?: number;
+}
+
 export type MessageType =
   | { type: 'ANALYZE_REPO'; repoUrl: string; fileTree: string[] }
   | { type: 'GET_CACHED_RESULT'; repoUrl: string }
   | { type: 'ANALYSIS_RESULT'; result: AnalysisResult }
-  | { type: 'ANALYSIS_ERROR'; error: string };
+  | { type: 'ANALYSIS_ERROR'; error: AnalysisError };

@@ -115,13 +115,106 @@
     "confidence": { "fileMatch": 10, "depMatch": 0, "contentMatch": 3 }
   },
   {
+    "id": "dart",
+    "name": "Dart",
+    "category": "language",
+    "website": "https://dart.dev",
+    "patterns": {
+      "files": ["*.dart", "pubspec.yaml", "pubspec.lock"]
+    },
+    "confidence": { "fileMatch": 10, "depMatch": 0, "contentMatch": 3 }
+  },
+  {
+    "id": "elixir",
+    "name": "Elixir",
+    "category": "language",
+    "website": "https://elixir-lang.org",
+    "patterns": {
+      "files": ["*.ex", "*.exs", "mix.exs", "mix.lock"]
+    },
+    "confidence": { "fileMatch": 10, "depMatch": 0, "contentMatch": 3 }
+  },
+  {
+    "id": "scala",
+    "name": "Scala",
+    "category": "language",
+    "website": "https://www.scala-lang.org",
+    "patterns": {
+      "files": ["*.scala", "build.sbt", "*.sc"]
+    },
+    "confidence": { "fileMatch": 10, "depMatch": 0, "contentMatch": 3 }
+  },
+  {
+    "id": "lua",
+    "name": "Lua",
+    "category": "language",
+    "website": "https://www.lua.org",
+    "patterns": {
+      "files": ["*.lua"]
+    },
+    "confidence": { "fileMatch": 10, "depMatch": 0, "contentMatch": 3 }
+  },
+  {
+    "id": "r-lang",
+    "name": "R",
+    "category": "language",
+    "website": "https://www.r-project.org",
+    "patterns": {
+      "files": ["*.R", "*.Rmd", "DESCRIPTION", ".Rprofile"]
+    },
+    "confidence": { "fileMatch": 8, "depMatch": 0, "contentMatch": 3 }
+  },
+  {
+    "id": "haskell",
+    "name": "Haskell",
+    "category": "language",
+    "website": "https://www.haskell.org",
+    "patterns": {
+      "files": ["*.hs", "*.cabal", "stack.yaml"]
+    },
+    "confidence": { "fileMatch": 10, "depMatch": 0, "contentMatch": 3 }
+  },
+  {
+    "id": "zig",
+    "name": "Zig",
+    "category": "language",
+    "website": "https://ziglang.org",
+    "patterns": {
+      "files": ["*.zig", "build.zig", "build.zig.zon"]
+    },
+    "confidence": { "fileMatch": 10, "depMatch": 0, "contentMatch": 3 }
+  },
+  {
+    "id": "ocaml",
+    "name": "OCaml",
+    "category": "language",
+    "website": "https://ocaml.org",
+    "patterns": {
+      "files": ["*.ml", "*.mli", "dune-project", "*.opam"]
+    },
+    "confidence": { "fileMatch": 10, "depMatch": 0, "contentMatch": 3 }
+  },
+  {
+    "id": "c-cpp",
+    "name": "C/C++",
+    "category": "language",
+    "patterns": {
+      "files": ["*.c", "*.cpp", "*.h", "*.hpp", "CMakeLists.txt", "Makefile"]
+    },
+    "confidence": { "fileMatch": 6, "depMatch": 0, "contentMatch": 3 }
+  },
+  {
     "id": "react",
     "name": "React",
     "category": "framework",
     "website": "https://react.dev",
     "patterns": {
       "files": ["*.jsx", "*.tsx"],
-      "dependencies": [{ "source": "package.json", "packages": ["react", "react-dom"] }]
+      "dependencies": [{ "source": "package.json", "packages": ["react", "react-dom"] }],
+      "contents": [
+        { "file": "*.tsx", "pattern": "import.*from ['\"]react['\"]" },
+        { "file": "*.jsx", "pattern": "import.*from ['\"]react['\"]" }
+      ]
     },
     "confidence": { "fileMatch": 6, "depMatch": 10, "contentMatch": 3 }
   },
@@ -182,6 +275,69 @@
     "confidence": { "fileMatch": 8, "depMatch": 10, "contentMatch": 3 }
   },
   {
+    "id": "remix",
+    "name": "Remix",
+    "category": "framework",
+    "website": "https://remix.run",
+    "patterns": {
+      "files": ["remix.config.js", "remix.config.ts"],
+      "dependencies": [{ "source": "package.json", "packages": ["@remix-run/react", "@remix-run/node"] }]
+    },
+    "confidence": { "fileMatch": 10, "depMatch": 10, "contentMatch": 3 }
+  },
+  {
+    "id": "astro",
+    "name": "Astro",
+    "category": "framework",
+    "website": "https://astro.build",
+    "patterns": {
+      "files": ["*.astro", "astro.config.mjs", "astro.config.ts"],
+      "dependencies": [{ "source": "package.json", "packages": ["astro"] }]
+    },
+    "confidence": { "fileMatch": 10, "depMatch": 10, "contentMatch": 3 }
+  },
+  {
+    "id": "solidjs",
+    "name": "SolidJS",
+    "category": "framework",
+    "website": "https://www.solidjs.com",
+    "patterns": {
+      "dependencies": [{ "source": "package.json", "packages": ["solid-js"] }]
+    },
+    "confidence": { "fileMatch": 5, "depMatch": 10, "contentMatch": 3 }
+  },
+  {
+    "id": "nestjs",
+    "name": "NestJS",
+    "category": "framework",
+    "website": "https://nestjs.com",
+    "patterns": {
+      "files": ["nest-cli.json"],
+      "dependencies": [{ "source": "package.json", "packages": ["@nestjs/core", "@nestjs/common"] }]
+    },
+    "confidence": { "fileMatch": 10, "depMatch": 10, "contentMatch": 3 }
+  },
+  {
+    "id": "hono",
+    "name": "Hono",
+    "category": "framework",
+    "website": "https://hono.dev",
+    "patterns": {
+      "dependencies": [{ "source": "package.json", "packages": ["hono"] }]
+    },
+    "confidence": { "fileMatch": 3, "depMatch": 10, "contentMatch": 3 }
+  },
+  {
+    "id": "koa",
+    "name": "Koa",
+    "category": "framework",
+    "website": "https://koajs.com",
+    "patterns": {
+      "dependencies": [{ "source": "package.json", "packages": ["koa"] }]
+    },
+    "confidence": { "fileMatch": 3, "depMatch": 10, "contentMatch": 3 }
+  },
+  {
     "id": "django",
     "name": "Django",
     "category": "framework",
@@ -189,7 +345,11 @@
     "patterns": {
       "files": ["manage.py", "settings.py", "wsgi.py", "asgi.py"],
       "directories": ["templates"],
-      "dependencies": [{ "source": "requirements.txt", "packages": ["django", "Django"] }]
+      "dependencies": [{ "source": "requirements.txt", "packages": ["django", "Django"] }],
+      "contents": [
+        { "file": "*.py", "pattern": "from django" },
+        { "file": "*.py", "pattern": "import django" }
+      ]
     },
     "confidence": { "fileMatch": 8, "depMatch": 10, "contentMatch": 3 }
   },
@@ -199,7 +359,10 @@
     "category": "framework",
     "website": "https://flask.palletsprojects.com",
     "patterns": {
-      "dependencies": [{ "source": "requirements.txt", "packages": ["flask", "Flask"] }]
+      "dependencies": [{ "source": "requirements.txt", "packages": ["flask", "Flask"] }],
+      "contents": [
+        { "file": "*.py", "pattern": "from flask import" }
+      ]
     },
     "confidence": { "fileMatch": 5, "depMatch": 10, "contentMatch": 3 }
   },
@@ -231,7 +394,11 @@
     "category": "framework",
     "website": "https://expressjs.com",
     "patterns": {
-      "dependencies": [{ "source": "package.json", "packages": ["express"] }]
+      "dependencies": [{ "source": "package.json", "packages": ["express"] }],
+      "contents": [
+        { "file": "*.js", "pattern": "require\\(['\"]express['\"]\\)" },
+        { "file": "*.ts", "pattern": "from ['\"]express['\"]" }
+      ]
     },
     "confidence": { "fileMatch": 3, "depMatch": 10, "contentMatch": 3 }
   },
@@ -258,6 +425,28 @@
       "dependencies": [{ "source": "composer.json", "packages": ["laravel/framework"] }]
     },
     "confidence": { "fileMatch": 8, "depMatch": 10, "contentMatch": 3 }
+  },
+  {
+    "id": "dotnet",
+    "name": ".NET / ASP.NET",
+    "category": "framework",
+    "website": "https://dotnet.microsoft.com",
+    "patterns": {
+      "files": ["*.csproj", "*.sln", "Program.cs", "Startup.cs", "appsettings.json"],
+      "directories": ["Controllers", "Models", "Views"]
+    },
+    "confidence": { "fileMatch": 6, "depMatch": 0, "contentMatch": 3 }
+  },
+  {
+    "id": "flutter",
+    "name": "Flutter",
+    "category": "framework",
+    "website": "https://flutter.dev",
+    "patterns": {
+      "files": ["pubspec.yaml"],
+      "directories": ["lib", "android", "ios"]
+    },
+    "confidence": { "fileMatch": 6, "depMatch": 0, "contentMatch": 5 }
   },
   {
     "id": "tailwindcss",
@@ -299,6 +488,49 @@
       "files": ["*.module.css", "*.module.scss"]
     },
     "confidence": { "fileMatch": 8, "depMatch": 0, "contentMatch": 3 }
+  },
+  {
+    "id": "postcss",
+    "name": "PostCSS",
+    "category": "styling",
+    "website": "https://postcss.org",
+    "patterns": {
+      "files": ["postcss.config.js", "postcss.config.cjs", "postcss.config.mjs", ".postcssrc"],
+      "dependencies": [{ "source": "package.json", "packages": ["postcss"] }]
+    },
+    "confidence": { "fileMatch": 10, "depMatch": 8, "contentMatch": 3 }
+  },
+  {
+    "id": "less",
+    "name": "Less",
+    "category": "styling",
+    "website": "https://lesscss.org",
+    "patterns": {
+      "files": ["*.less"],
+      "dependencies": [{ "source": "package.json", "packages": ["less"] }]
+    },
+    "confidence": { "fileMatch": 8, "depMatch": 8, "contentMatch": 3 }
+  },
+  {
+    "id": "emotion",
+    "name": "Emotion",
+    "category": "styling",
+    "website": "https://emotion.sh",
+    "patterns": {
+      "dependencies": [{ "source": "package.json", "packages": ["@emotion/react", "@emotion/styled"] }]
+    },
+    "confidence": { "fileMatch": 3, "depMatch": 10, "contentMatch": 3 }
+  },
+  {
+    "id": "unocss",
+    "name": "UnoCSS",
+    "category": "styling",
+    "website": "https://unocss.dev",
+    "patterns": {
+      "files": ["uno.config.ts", "uno.config.js"],
+      "dependencies": [{ "source": "package.json", "packages": ["unocss"] }]
+    },
+    "confidence": { "fileMatch": 10, "depMatch": 10, "contentMatch": 3 }
   },
   {
     "id": "webpack",
@@ -353,6 +585,58 @@
       "dependencies": [{ "source": "package.json", "packages": ["turbo"] }]
     },
     "confidence": { "fileMatch": 10, "depMatch": 10, "contentMatch": 3 }
+  },
+  {
+    "id": "swc",
+    "name": "SWC",
+    "category": "build-tool",
+    "website": "https://swc.rs",
+    "patterns": {
+      "files": [".swcrc"],
+      "dependencies": [{ "source": "package.json", "packages": ["@swc/core", "@swc/cli"] }]
+    },
+    "confidence": { "fileMatch": 10, "depMatch": 8, "contentMatch": 3 }
+  },
+  {
+    "id": "parcel",
+    "name": "Parcel",
+    "category": "build-tool",
+    "website": "https://parceljs.org",
+    "patterns": {
+      "files": [".parcelrc"],
+      "dependencies": [{ "source": "package.json", "packages": ["parcel"] }]
+    },
+    "confidence": { "fileMatch": 10, "depMatch": 8, "contentMatch": 3 }
+  },
+  {
+    "id": "bazel",
+    "name": "Bazel",
+    "category": "build-tool",
+    "website": "https://bazel.build",
+    "patterns": {
+      "files": ["BUILD", "BUILD.bazel", "WORKSPACE", "WORKSPACE.bazel", "*.bzl"]
+    },
+    "confidence": { "fileMatch": 10, "depMatch": 0, "contentMatch": 3 }
+  },
+  {
+    "id": "gradle",
+    "name": "Gradle",
+    "category": "build-tool",
+    "website": "https://gradle.org",
+    "patterns": {
+      "files": ["build.gradle", "build.gradle.kts", "settings.gradle", "settings.gradle.kts", "gradlew"]
+    },
+    "confidence": { "fileMatch": 10, "depMatch": 0, "contentMatch": 3 }
+  },
+  {
+    "id": "maven",
+    "name": "Maven",
+    "category": "build-tool",
+    "website": "https://maven.apache.org",
+    "patterns": {
+      "files": ["pom.xml", "mvnw"]
+    },
+    "confidence": { "fileMatch": 10, "depMatch": 0, "contentMatch": 3 }
   },
   {
     "id": "jest",
@@ -422,6 +706,42 @@
     "confidence": { "fileMatch": 10, "depMatch": 8, "contentMatch": 3 }
   },
   {
+    "id": "testing-library",
+    "name": "Testing Library",
+    "category": "testing",
+    "website": "https://testing-library.com",
+    "patterns": {
+      "dependencies": [{ "source": "package.json", "packages": ["@testing-library/react", "@testing-library/jest-dom", "@testing-library/vue"] }]
+    },
+    "confidence": { "fileMatch": 3, "depMatch": 8, "contentMatch": 3 }
+  },
+  {
+    "id": "rspec",
+    "name": "RSpec",
+    "category": "testing",
+    "website": "https://rspec.info",
+    "patterns": {
+      "files": [".rspec"],
+      "directories": ["spec"],
+      "dependencies": [{ "source": "Gemfile", "packages": ["rspec", "rspec-rails"] }]
+    },
+    "confidence": { "fileMatch": 8, "depMatch": 8, "contentMatch": 3 }
+  },
+  {
+    "id": "selenium",
+    "name": "Selenium",
+    "category": "testing",
+    "website": "https://www.selenium.dev",
+    "patterns": {
+      "dependencies": [
+        { "source": "package.json", "packages": ["selenium-webdriver"] },
+        { "source": "requirements.txt", "packages": ["selenium"] },
+        { "source": "Gemfile", "packages": ["selenium-webdriver"] }
+      ]
+    },
+    "confidence": { "fileMatch": 3, "depMatch": 8, "contentMatch": 3 }
+  },
+  {
     "id": "docker",
     "name": "Docker",
     "category": "devops",
@@ -462,6 +782,38 @@
     "confidence": { "fileMatch": 10, "depMatch": 0, "contentMatch": 3 }
   },
   {
+    "id": "circleci",
+    "name": "CircleCI",
+    "category": "devops",
+    "website": "https://circleci.com",
+    "patterns": {
+      "files": [".circleci/config.yml"],
+      "directories": [".circleci"]
+    },
+    "confidence": { "fileMatch": 10, "depMatch": 0, "contentMatch": 3 }
+  },
+  {
+    "id": "travis-ci",
+    "name": "Travis CI",
+    "category": "devops",
+    "website": "https://www.travis-ci.com",
+    "patterns": {
+      "files": [".travis.yml"]
+    },
+    "confidence": { "fileMatch": 10, "depMatch": 0, "contentMatch": 3 }
+  },
+  {
+    "id": "ansible",
+    "name": "Ansible",
+    "category": "devops",
+    "website": "https://www.ansible.com",
+    "patterns": {
+      "files": ["ansible.cfg", "playbook.yml"],
+      "directories": ["roles", "playbooks"]
+    },
+    "confidence": { "fileMatch": 8, "depMatch": 0, "contentMatch": 3 }
+  },
+  {
     "id": "terraform",
     "name": "Terraform",
     "category": "infrastructure",
@@ -481,6 +833,38 @@
       "files": ["*.yaml", "*.yml"]
     },
     "confidence": { "fileMatch": 5, "depMatch": 0, "contentMatch": 5 }
+  },
+  {
+    "id": "pulumi",
+    "name": "Pulumi",
+    "category": "infrastructure",
+    "website": "https://www.pulumi.com",
+    "patterns": {
+      "files": ["Pulumi.yaml", "Pulumi.*.yaml"]
+    },
+    "confidence": { "fileMatch": 10, "depMatch": 0, "contentMatch": 3 }
+  },
+  {
+    "id": "aws-cdk",
+    "name": "AWS CDK",
+    "category": "infrastructure",
+    "website": "https://aws.amazon.com/cdk/",
+    "patterns": {
+      "files": ["cdk.json"],
+      "dependencies": [{ "source": "package.json", "packages": ["aws-cdk-lib", "aws-cdk"] }]
+    },
+    "confidence": { "fileMatch": 10, "depMatch": 10, "contentMatch": 3 }
+  },
+  {
+    "id": "serverless",
+    "name": "Serverless Framework",
+    "category": "infrastructure",
+    "website": "https://www.serverless.com",
+    "patterns": {
+      "files": ["serverless.yml", "serverless.yaml", "serverless.ts"],
+      "dependencies": [{ "source": "package.json", "packages": ["serverless"] }]
+    },
+    "confidence": { "fileMatch": 10, "depMatch": 10, "contentMatch": 3 }
   },
   {
     "id": "postgresql",
@@ -550,6 +934,148 @@
     "confidence": { "fileMatch": 8, "depMatch": 8, "contentMatch": 3 }
   },
   {
+    "id": "elasticsearch",
+    "name": "Elasticsearch",
+    "category": "database",
+    "website": "https://www.elastic.co/elasticsearch",
+    "patterns": {
+      "dependencies": [
+        { "source": "package.json", "packages": ["@elastic/elasticsearch", "elasticsearch"] },
+        { "source": "requirements.txt", "packages": ["elasticsearch"] }
+      ]
+    },
+    "confidence": { "fileMatch": 3, "depMatch": 8, "contentMatch": 3 }
+  },
+  {
+    "id": "neo4j",
+    "name": "Neo4j",
+    "category": "database",
+    "website": "https://neo4j.com",
+    "patterns": {
+      "dependencies": [
+        { "source": "package.json", "packages": ["neo4j-driver"] },
+        { "source": "requirements.txt", "packages": ["neo4j"] }
+      ]
+    },
+    "confidence": { "fileMatch": 3, "depMatch": 8, "contentMatch": 3 }
+  },
+  {
+    "id": "graphql",
+    "name": "GraphQL",
+    "category": "library",
+    "website": "https://graphql.org",
+    "patterns": {
+      "files": ["*.graphql", "*.gql", ".graphqlrc", ".graphqlrc.yml"],
+      "dependencies": [
+        { "source": "package.json", "packages": ["graphql", "@apollo/client", "apollo-server", "@graphql-tools/schema"] }
+      ]
+    },
+    "confidence": { "fileMatch": 8, "depMatch": 8, "contentMatch": 3 }
+  },
+  {
+    "id": "prisma",
+    "name": "Prisma",
+    "category": "library",
+    "website": "https://www.prisma.io",
+    "patterns": {
+      "files": ["prisma/schema.prisma"],
+      "directories": ["prisma"],
+      "dependencies": [{ "source": "package.json", "packages": ["prisma", "@prisma/client"] }]
+    },
+    "confidence": { "fileMatch": 10, "depMatch": 10, "contentMatch": 3 }
+  },
+  {
+    "id": "axios",
+    "name": "Axios",
+    "category": "library",
+    "website": "https://axios-http.com",
+    "patterns": {
+      "dependencies": [{ "source": "package.json", "packages": ["axios"] }]
+    },
+    "confidence": { "fileMatch": 3, "depMatch": 8, "contentMatch": 3 }
+  },
+  {
+    "id": "lodash",
+    "name": "Lodash",
+    "category": "library",
+    "website": "https://lodash.com",
+    "patterns": {
+      "dependencies": [{ "source": "package.json", "packages": ["lodash", "lodash-es"] }]
+    },
+    "confidence": { "fileMatch": 3, "depMatch": 8, "contentMatch": 3 }
+  },
+  {
+    "id": "redux",
+    "name": "Redux",
+    "category": "library",
+    "website": "https://redux.js.org",
+    "patterns": {
+      "dependencies": [{ "source": "package.json", "packages": ["redux", "@reduxjs/toolkit", "react-redux"] }]
+    },
+    "confidence": { "fileMatch": 3, "depMatch": 8, "contentMatch": 3 }
+  },
+  {
+    "id": "zustand",
+    "name": "Zustand",
+    "category": "library",
+    "website": "https://zustand-demo.pmnd.rs",
+    "patterns": {
+      "dependencies": [{ "source": "package.json", "packages": ["zustand"] }]
+    },
+    "confidence": { "fileMatch": 3, "depMatch": 10, "contentMatch": 3 }
+  },
+  {
+    "id": "mobx",
+    "name": "MobX",
+    "category": "library",
+    "website": "https://mobx.js.org",
+    "patterns": {
+      "dependencies": [{ "source": "package.json", "packages": ["mobx", "mobx-react", "mobx-react-lite"] }]
+    },
+    "confidence": { "fileMatch": 3, "depMatch": 8, "contentMatch": 3 }
+  },
+  {
+    "id": "pinia",
+    "name": "Pinia",
+    "category": "library",
+    "website": "https://pinia.vuejs.org",
+    "patterns": {
+      "dependencies": [{ "source": "package.json", "packages": ["pinia"] }]
+    },
+    "confidence": { "fileMatch": 3, "depMatch": 10, "contentMatch": 3 }
+  },
+  {
+    "id": "socket-io",
+    "name": "Socket.IO",
+    "category": "library",
+    "website": "https://socket.io",
+    "patterns": {
+      "dependencies": [{ "source": "package.json", "packages": ["socket.io", "socket.io-client"] }]
+    },
+    "confidence": { "fileMatch": 3, "depMatch": 8, "contentMatch": 3 }
+  },
+  {
+    "id": "trpc",
+    "name": "tRPC",
+    "category": "library",
+    "website": "https://trpc.io",
+    "patterns": {
+      "dependencies": [{ "source": "package.json", "packages": ["@trpc/server", "@trpc/client", "@trpc/react-query"] }]
+    },
+    "confidence": { "fileMatch": 3, "depMatch": 10, "contentMatch": 3 }
+  },
+  {
+    "id": "drizzle",
+    "name": "Drizzle ORM",
+    "category": "library",
+    "website": "https://orm.drizzle.team",
+    "patterns": {
+      "files": ["drizzle.config.ts", "drizzle.config.js"],
+      "dependencies": [{ "source": "package.json", "packages": ["drizzle-orm", "drizzle-kit"] }]
+    },
+    "confidence": { "fileMatch": 10, "depMatch": 10, "contentMatch": 3 }
+  },
+  {
     "id": "eslint",
     "name": "ESLint",
     "category": "other",
@@ -584,31 +1110,6 @@
     "confidence": { "fileMatch": 10, "depMatch": 8, "contentMatch": 3 }
   },
   {
-    "id": "graphql",
-    "name": "GraphQL",
-    "category": "library",
-    "website": "https://graphql.org",
-    "patterns": {
-      "files": ["*.graphql", "*.gql", ".graphqlrc", ".graphqlrc.yml"],
-      "dependencies": [
-        { "source": "package.json", "packages": ["graphql", "@apollo/client", "apollo-server", "@graphql-tools/schema"] }
-      ]
-    },
-    "confidence": { "fileMatch": 8, "depMatch": 8, "contentMatch": 3 }
-  },
-  {
-    "id": "prisma",
-    "name": "Prisma",
-    "category": "library",
-    "website": "https://www.prisma.io",
-    "patterns": {
-      "files": ["prisma/schema.prisma"],
-      "directories": ["prisma"],
-      "dependencies": [{ "source": "package.json", "packages": ["prisma", "@prisma/client"] }]
-    },
-    "confidence": { "fileMatch": 10, "depMatch": 10, "contentMatch": 3 }
-  },
-  {
     "id": "storybook",
     "name": "Storybook",
     "category": "other",
@@ -619,5 +1120,36 @@
       "dependencies": [{ "source": "package.json", "packages": ["@storybook/react", "@storybook/vue3"] }]
     },
     "confidence": { "fileMatch": 8, "depMatch": 8, "contentMatch": 3 }
+  },
+  {
+    "id": "biome",
+    "name": "Biome",
+    "category": "other",
+    "website": "https://biomejs.dev",
+    "patterns": {
+      "files": ["biome.json", "biome.jsonc"],
+      "dependencies": [{ "source": "package.json", "packages": ["@biomejs/biome"] }]
+    },
+    "confidence": { "fileMatch": 10, "depMatch": 10, "contentMatch": 3 }
+  },
+  {
+    "id": "renovate",
+    "name": "Renovate",
+    "category": "other",
+    "website": "https://www.mend.io/renovate/",
+    "patterns": {
+      "files": ["renovate.json", "renovate.json5", ".renovaterc", ".renovaterc.json"]
+    },
+    "confidence": { "fileMatch": 10, "depMatch": 0, "contentMatch": 3 }
+  },
+  {
+    "id": "dependabot",
+    "name": "Dependabot",
+    "category": "other",
+    "website": "https://github.com/dependabot",
+    "patterns": {
+      "files": [".github/dependabot.yml", ".github/dependabot.yaml"]
+    },
+    "confidence": { "fileMatch": 10, "depMatch": 0, "contentMatch": 3 }
   }
 ]
