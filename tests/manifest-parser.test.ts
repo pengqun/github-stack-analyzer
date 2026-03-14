@@ -6,6 +6,7 @@ import {
   parseGoMod,
   parseCargoToml,
   parseComposerJson,
+  parsePyprojectToml,
   parseManifestContent,
 } from '../src/utils/manifest-parser';
 
@@ -171,6 +172,90 @@ describe('parseComposerJson', () => {
   });
 });
 
+describe('parsePyprojectToml', () => {
+  it('parses PEP 621 dependencies array', () => {
+    const content = `
+[project]
+name = "myproject"
+version = "1.0.0"
+dependencies = [
+  "flask>=2.0",
+  "requests~=2.28",
+  "sqlalchemy",
+]
+`;
+    const deps = parsePyprojectToml(content);
+
+    expect(deps).toContain('flask');
+    expect(deps).toContain('requests');
+    expect(deps).toContain('sqlalchemy');
+  });
+
+  it('parses PEP 621 inline dependencies', () => {
+    const content = `
+[project]
+name = "myproject"
+dependencies = ["flask>=2.0", "requests"]
+`;
+    const deps = parsePyprojectToml(content);
+
+    expect(deps).toContain('flask');
+    expect(deps).toContain('requests');
+  });
+
+  it('parses optional dependencies', () => {
+    const content = `
+[project.optional-dependencies]
+dev = [
+  "pytest>=7.0",
+  "mypy",
+]
+`;
+    const deps = parsePyprojectToml(content);
+
+    expect(deps).toContain('pytest');
+    expect(deps).toContain('mypy');
+  });
+
+  it('parses Poetry-style dependencies', () => {
+    const content = `
+[tool.poetry.dependencies]
+python = "^3.10"
+django = "^4.2"
+celery = {version = "^5.3", extras = ["redis"]}
+
+[tool.poetry.dev-dependencies]
+pytest = "^7.0"
+`;
+    const deps = parsePyprojectToml(content);
+
+    expect(deps).toContain('django');
+    expect(deps).toContain('celery');
+    expect(deps).toContain('pytest');
+    expect(deps).not.toContain('python');
+  });
+
+  it('handles empty pyproject.toml', () => {
+    const content = `
+[project]
+name = "myproject"
+version = "1.0.0"
+`;
+    expect(parsePyprojectToml(content)).toEqual([]);
+  });
+
+  it('strips extras from package names', () => {
+    const content = `
+[project]
+dependencies = ["requests[security]>=2.28"]
+`;
+    const deps = parsePyprojectToml(content);
+
+    expect(deps).toContain('requests');
+    expect(deps).not.toContain('requests[security]');
+  });
+});
+
 describe('parseManifestContent', () => {
   it('routes to correct parser based on filename', () => {
     expect(parseManifestContent('package.json', '{"dependencies":{"react":"^18"}}')).toContain(
@@ -181,6 +266,12 @@ describe('parseManifestContent', () => {
     expect(
       parseManifestContent('go.mod', 'require github.com/gin-gonic/gin v1.0'),
     ).toContain('github.com/gin-gonic/gin');
+  });
+
+  it('routes pyproject.toml to parser', () => {
+    expect(
+      parseManifestContent('pyproject.toml', '[project]\ndependencies = ["flask"]'),
+    ).toContain('flask');
   });
 
   it('returns empty array for unknown manifest type', () => {
