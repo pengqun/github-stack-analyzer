@@ -169,6 +169,119 @@ export function parseComposerJson(content: string): string[] {
 }
 
 /**
+ * Parse dependencies from pyproject.toml content.
+ * Handles PEP 621 [project] dependencies and [tool.poetry.dependencies].
+ */
+export function parsePyprojectToml(content: string): string[] {
+  const deps = new Set<string>();
+  const lines = content.split('\n');
+
+  let inDependencies = false;
+  let inOptionalGroup = false;
+  let inPoetryDeps = false;
+  let inPoetryDevDeps = false;
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+
+    // Track section headers
+    if (trimmed === '[project]' || trimmed === '[package]') {
+      inDependencies = false;
+      inOptionalGroup = false;
+      inPoetryDeps = false;
+      inPoetryDevDeps = false;
+      continue;
+    }
+
+    if (trimmed === '[tool.poetry.dependencies]') {
+      inPoetryDeps = true;
+      inPoetryDevDeps = false;
+      inDependencies = false;
+      inOptionalGroup = false;
+      continue;
+    }
+
+    if (trimmed === '[tool.poetry.dev-dependencies]' || trimmed === '[tool.poetry.group.dev.dependencies]') {
+      inPoetryDevDeps = true;
+      inPoetryDeps = false;
+      inDependencies = false;
+      inOptionalGroup = false;
+      continue;
+    }
+
+    if (/^\[project\.optional-dependencies/.test(trimmed)) {
+      inOptionalGroup = true;
+      inDependencies = false;
+      inPoetryDeps = false;
+      inPoetryDevDeps = false;
+      continue;
+    }
+
+    // Any other section header resets state
+    if (trimmed.startsWith('[')) {
+      inDependencies = false;
+      inOptionalGroup = false;
+      inPoetryDeps = false;
+      inPoetryDevDeps = false;
+      continue;
+    }
+
+    // PEP 621: dependencies = ["flask>=2.0", "requests"]
+    const depsArrayMatch = trimmed.match(/^dependencies\s*=\s*\[/);
+    if (depsArrayMatch) {
+      inDependencies = true;
+      // Parse inline items on same line
+      extractPep621Deps(trimmed, deps);
+      if (trimmed.includes(']')) {
+        inDependencies = false;
+      }
+      continue;
+    }
+
+    // Continuation of a dependencies array
+    if (inDependencies || inOptionalGroup) {
+      extractPep621Deps(trimmed, deps);
+      if (trimmed.includes(']')) {
+        inDependencies = false;
+        inOptionalGroup = false;
+      }
+      continue;
+    }
+
+    // Optional dependency group values (e.g., dev = ["pytest", ...])
+    if (inOptionalGroup) {
+      extractPep621Deps(trimmed, deps);
+      continue;
+    }
+
+    // Poetry-style: package-name = "^1.0" or package-name = {version = "^1.0", ...}
+    if (inPoetryDeps || inPoetryDevDeps) {
+      const poetryMatch = trimmed.match(/^([a-zA-Z0-9_-]+)\s*=/);
+      if (poetryMatch && poetryMatch[1] !== 'python') {
+        deps.add(poetryMatch[1]);
+      }
+    }
+  }
+
+  return [...deps];
+}
+
+/**
+ * Extract PEP 621-style dependency names from a line containing quoted package specs.
+ * E.g., "flask>=2.0" -> "flask", "requests[security]~=2.28" -> "requests"
+ */
+function extractPep621Deps(line: string, deps: Set<string>): void {
+  const matches = line.matchAll(/["']([a-zA-Z0-9_][a-zA-Z0-9._-]*)/g);
+  for (const match of matches) {
+    // Strip extras like [security] — just get the base package name
+    const name = match[1].split('[')[0];
+    if (name) {
+      deps.add(name);
+    }
+  }
+}
+
+/**
  * Route a manifest file to its appropriate parser.
  */
 export function parseManifestContent(fileName: string, content: string): string[] {
@@ -178,6 +291,7 @@ export function parseManifestContent(fileName: string, content: string): string[
   if (fileName === 'go.mod') return parseGoMod(content);
   if (fileName === 'Cargo.toml') return parseCargoToml(content);
   if (fileName === 'composer.json') return parseComposerJson(content);
+  if (fileName === 'pyproject.toml') return parsePyprojectToml(content);
   return [];
 }
 
